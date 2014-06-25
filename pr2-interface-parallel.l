@@ -15,6 +15,8 @@
 
 ;; sending angle-vector separately for each action controllers
 (setf (get *ri* :angle-vector-queue-table) (make-hash-table))
+
+;(:default-controller :torso-controller :head-controller :rarm-controller :larm-controller)それぞれに対して
 (dolist (ctype (send (pr2-interface-controller-table *ri*) :list-keys))
   (setf (gethash ctype (get *ri* :angle-vector-queue-table)) (instance queue :init)))
 
@@ -34,4 +36,5 @@
                    (let ((avs-tms (send v :pop)))
                      (send self :angle-vector-sequence (car avs-tms) (cdr avs-tms) k))))
              (send qtable :list-keys) (send qtable :list-values))))
+;;           :defa :rarm とか５つ      "<queue # ...> が５つ
   )
