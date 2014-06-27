@@ -51,13 +51,16 @@
 (pr2-init);;(setq *ri* (instance pr2-interface :init))etc...
 
 
-(defun manip(&key (a 1))
+(defun manip (&key (a 1))
   (send *pr2* :reset-manip-pose)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
-  (send *pr2* :rarm :end-coords)
-  (send *pr2* :rarm :end-coords :copy-worldcoords)
+;;  (send *pr2* :rarm :end-coords)
+  ;; (let ((c (send *pr2* :rarm :end-coords :copy-worldcoords))) copyしないと、手先の目印自体を動かしてしまうことになって良くないので、手先の目印のコピーを作る
+  ;;   (send c :translate (float-vector 100 0 0) :world)　それを１０cm動かして
+  ;;   (send *pr2* :rarm :inverse-kinematics c :rotation-axis nil)　inverse-linematicsを解く
+  ;;   )
 ;;  (send (send *pr2* :rarm :end-coords) :copy-worldcoords)
-  (send *pr2* :rarm :move-end-pos #f(100 0 0) :world :rotation-axis nil)
+  (send *pr2* :rarm :move-end-pos #f(100 0 0) :world :rotation-axis nil) ;;それらとほぼ同義なのがmove-end-pos
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
   (send *ri* :angle-vector-parallel a)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
