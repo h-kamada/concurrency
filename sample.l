@@ -23,76 +23,129 @@
    (avs tms ctype)
    (send (gethash ctype (get self :angle-vector-queue-table)) :push (cons avs tms)))
   (:angle-vector-parallel
-   (av tm ctype)
-   (send self :angle-vector-sequence-parallel (list av) (list tm) ctype))
-  (:dequeue-with-checking-results
-   ();;   ((a (send (get self :angle-vector-queue-table) :list-keys)))
+   (av &optional (tm 3000) (ctype :default-controller))
+   (if (equal ctype :default-controller)
+       (progn
+         (send self :angle-vector-sequence-parallel (list av) (list tm) :rarm-controller)
+         (send self :angle-vector-sequence-parallel (list av) (list tm) :larm-controller)
+         (send self :angle-vector-sequence-parallel (list av) (list tm) :torso-controller)
+         (send self :angle-vector-sequence-parallel (list av) (list tm) :head-controller))
+     (send self :angle-vector-sequence-parallel (list av) (list tm) ctype)))
+  (:dequeue
+   ()
    (let ((qtable (get self :angle-vector-queue-table)))
      (mapcar #'(lambda (k v)
-                 (when (not (find actionlib_msgs::GoalStatus::*ACTIVE*
-                                  (send-all (gethash k controller-table) :get-state)))
-                   (let ((avs-tms (send v :pop)))
-                     (send self :angle-vector-sequence (car avs-tms) (cdr avs-tms) k))))
-             (send qtable :list-keys) (send qtable :list-values))))
+                 (unless (equal k :default-controller)
+                   (ros::ros-info "~A" (find actionlib_msgs::GoalStatus::*ACTIVE*(send-all (gethash k controller-table) :get-state)))
+                   (when (not (find actionlib_msgs::GoalStatus::*ACTIVE*
+                                    (send-all (gethash k controller-table) :get-state)))
+                     (let ((avs-tms (send v :pop)))
+                       (unless (null (car(car avs-tms)))
+                         (unless (null (car(cdr avs-tms)))
+                           (send self :angle-vector (car(car avs-tms)) (car(cdr avs-tms)) k)))))))
+             (send qtable :list-keys) (send qtable :list-values)))))
 ;;           :defa :rarm とか５つ      "<queue # ...> が５つ
-  )
 
 
 ;;(pr2) ;;(setq *pr2* (instance pr2-robot :init)) pr2.l
 (pr2-init);;(setq *ri* (instance pr2-interface :init))etc...
 
 
+(defun manip(&key (a 1))
+  (send *pr2* :reset-manip-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
+  (send *pr2* :rarm :end-coords)
+  (send *pr2* :rarm :end-coords :copy-worldcoords)
+;;  (send (send *pr2* :rarm :end-coords) :copy-worldcoords)
+  (send *pr2* :rarm :move-end-pos #f(100 0 0) :world :rotation-axis nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
+  (send *ri* :angle-vector-parallel a)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
+
+  (send *pr2* :larm :move-end-pos #f(100 0 0) :world :rotation-axis nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
+  (send *pr2* :larm :move-end-pos #f(-100 0 0) :world :rotation-axis nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000)
+ ;;(send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 0 -300 0) :world))
+;;(send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 10) :z :world))
+;;make-irtviewer
+;;send *irtviewer* :draw-object
+)
+
+(defun rarm-manip(&key (a 1))
+  (send *ri* :stop-grasp)
+  (send *ri* :start-grasp)
+  (send *ri* :angle-vector-parallel #f(310.81 72.3856 50.0508 110.787 -102.228 -18.682 -30.4213 -10.0 -49.7162 74.2584 -79.1314 -112.384 135.238 -47.9526 -127.815 0.0 50.0) 2000 :rarm-controller)
+  (send *pr2* :angle-vector (send *ri* :state :potentio-vector))
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 0) :world))
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :rarm-controller)
+)
+
 (defun rarm (&key (sp 0)(sr 0))
   (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-;;  (unix:sleep 1)
-  (send *pr2* :rarm :shoulder-p :joint-angle 20);;肩上げる方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-;;  (unix:sleep 1)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
   (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-;;  (unix:sleep 1)
-  (send *pr2* :rarm :shoulder-p :joint-angle 20);;肩上げる方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
+  (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
+  (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
+
 )
 
 (defun larm (&key (sp 0)(sr 0))
   (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-  ;;(unix:sleep 1)
-  (send *pr2* :larm :shoulder-p :joint-angle 20);;肩上げる方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :larm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-;;  (unix:sleep 1)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-  ;;(unix:sleep 1)
-  (send *pr2* :larm :shoulder-p :joint-angle 30);;肩上げる方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :larm-controller)
-;;  (send *ri* :dequeue-with-checking-results)
-  ;;(unix:sleep 1)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
+  (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向
+  (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
 )
 
 (defun torso (&key (wz 50))
-  (send *pr2* :torso :waist-z :joint-angle wz)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :torso-controller))
+  (send *pr2* :torso :waist-z :joint-angle 200)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :torso-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :torso-controller)
+  (send *pr2* :torso :waist-z :joint-angle 200)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :torso-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :torso-controller)
+  (send *pr2* :torso :waist-z :joint-angle 200)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :torso-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :torso-controller)
+)
 
 (defun head (&key (np 0))
-  (send *pr2* :head :neck-p :joint-angle np)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :head-controller)
   (send *pr2* :head :neck-p :joint-angle 50)
-  (send *ri* :wait-interpolation)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :head-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :head-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :head-controller)
+  (send *pr2* :head :neck-p :joint-angle 50)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :head-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :head-controller)
+  (send *pr2* :head :neck-p :joint-angle 50)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :head-controller)
+  (send *pr2* :reset-pose)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :head-controller)
 )
 
 (defun reset (&key (arg 1))
@@ -140,24 +193,26 @@
 
 (defun demo()
   (progn
-    (rarm :sp 30 :sr 30)
-    (larm :sp 30 :sr -30)
-;;    (torso 200)
     (head )
-    (reset)
     (rarm )
     (larm )
-    (catch)
-    (move)
-    (rarm)
-    (nagiharai)
-    (reset)
-    (head )
-    (rarm )
-    (larm )))
+    (ros::rate 10);;[hz]
+    (while (ros::ok)
+      (print 1)
+      (ros::spin-once)
+      (send *ri* :spin-once)
+      (send *ri* :dequeue)
+      (ros::sleep)
+      )))
+
   ;;  (torso 150)))
   ;;(send *ri* :angle-vector (send *pr2* :angle-vector ) 2000 :rarm-controller)
   ;;(send *ri* :angle-vector (send *pr2* :angle-vector ) 2000 :larm-controller)
   ;;(send *ri* :angle-vector (send *pr2* :angle-vector ) 2000 :head-controller)
   ;;(send *ri* :angle-vector (send *pr2* :angle-vector ) 2000 :torso-controller)
   ;;これらをmapcarで順にやらせているのが通常の:angle-vector
+
+
+
+
+
