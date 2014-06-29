@@ -83,7 +83,7 @@
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 10) :y :world) :use-torso nil)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 30) :x :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 -100) :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 -100) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
   (send *ri* :start-grasp :rarm)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector -100 0 100) :world) :use-torso nil)
@@ -291,6 +291,7 @@
 (defun demo()
   (progn
     (send *pr2* :reset-manip-pose)
+    (send *pr2* :torso :waist-z :joint-angle 380)
     (send *ri* :angle-vector (send *pr2* :angle-vector) 3000)
     (head )
 
