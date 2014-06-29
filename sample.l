@@ -83,18 +83,22 @@
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 10) :y :world) :use-torso nil)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 30) :x :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 -100) :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 0 0 50) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 -100) :world) :use-torso nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 4000 :rarm-controller)
   (send *ri* :start-grasp :rarm)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector -100 0 100) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 0 -200 0) :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 0 -400 0) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 -100) :world) :use-torso nil)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :rarm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 4000 :rarm-controller)
   (send *ri* :stop-grasp :rarm )
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector -100 0 0) :world) :use-torso nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 4000 :rarm-controller)
   (send *pr2* :reset-manip-pose)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :rarm-controller)
 )
 (defun larm-manip(&key (a 1))
   (send *pr2* :reset-manip-pose)
@@ -103,6 +107,10 @@
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :rotate (deg2rad 40) :z :world) :use-torso nil :use-torso nil)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :rotate (deg2rad 10) :y :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 0 0 50) :world) :use-torso nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :larm-controller)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 -100) :world) :use-torso nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 1000 :larm-controller)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 300 0 0) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
   (send *ri* :start-grasp :larm)
@@ -111,13 +119,21 @@
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 0 200 0) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 -100) :world) :use-torso nil)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 4000 :larm-controller)
   (send *ri* :stop-grasp :larm)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector -100 0 0) :world) :use-torso nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 4000 :larm-controller)
   (send *pr2* :reset-manip-pose)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :larm-controller)
 )
 
 (defun rarm (&key (sp 0)(sr 0))
+  (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
+  (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
+  (send *pr2* :rarm :shoulder-p :joint-angle 70);;肩上げる方向
+  (send *pr2* :rarm :shoulder-r :joint-angle -74);;回外回内方向
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
   (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
@@ -141,6 +157,12 @@
 (defun larm (&key (sp 0)(sr 0))
   (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向 74
   (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向 70
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
+  (send *pr2* :larm :shoulder-p :joint-angle 74);;肩上げる方向 74
+  (send *pr2* :larm :shoulder-r :joint-angle 70);;;回外回内方向 70
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
+  (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向
+  (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle 74);;肩上げる方向 74
   (send *pr2* :larm :shoulder-r :joint-angle 70);;;回外回内方向 70
@@ -249,28 +271,31 @@
 (defun rarm-nagi(&key (a 1))
   (send *pr2* :reset-manip-pose)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 0) :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 50) :world) :use-torso nil)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 20) :y :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 0 0 -100) :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 0 0 -150) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
-
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 10) :x :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 30) :y :world) :use-torso nil)
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 20) :x :world) :use-torso nil)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 0) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector -200 0 0) :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
 
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 0) :world) :use-torso nil)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector -200 0 0) :world) :use-torso nil)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
+  ;; (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector 200 0 0) :world) :use-torso nil)
+  ;; (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
+  ;; (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :translate (float-vector -200 0 0) :world) :use-torso nil)
+  ;; (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :rarm-controller)
 )
 
 
 (defun larm-nagi(&key (a 1))
   (send *pr2* :reset-manip-pose)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
-  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 0) :world) :use-torso nil);; :use-torso nil ってするとたぶんtorsoを使わずに済む
+  (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 100 0 50) :world) :use-torso nil);; :use-torso nil ってするとたぶんtorsoを使わずに済む
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :rotate (deg2rad 20) :y :world) :use-torso nil)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 1000 :larm-controller)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :larm :end-coords) :copy-worldcoords) :translate (float-vector 0 0 -100) :world) :use-torso nil)
@@ -295,9 +320,9 @@
     (send *ri* :angle-vector (send *pr2* :angle-vector) 3000)
     (head )
 
+    (rarm-manip)
     (rarm-nagi)
     (rarm )
-    (rarm-manip)
 
     (larm )
     (larm-manip)
