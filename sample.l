@@ -121,39 +121,42 @@
   (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-  (send *pr2* :reset-pose)
+  (send *pr2* :rarm :shoulder-p :joint-angle 70);;肩上げる方向
+  (send *pr2* :rarm :shoulder-r :joint-angle -74);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
   (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-  (send *pr2* :reset-pose)
+  (send *pr2* :rarm :shoulder-p :joint-angle 70);;肩上げる方向
+  (send *pr2* :rarm :shoulder-r :joint-angle -74);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
   (send *pr2* :rarm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :rarm :shoulder-r :joint-angle sr);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-  (send *pr2* :reset-pose)
+  (send *pr2* :rarm :shoulder-p :joint-angle 70);;肩上げる方向
+  (send *pr2* :rarm :shoulder-r :joint-angle -74);;回外回内方向
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
   )
 
 (defun larm (&key (sp 0)(sr 0))
   (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向 74
   (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向 70
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle 74);;肩上げる方向 74
   (send *pr2* :larm :shoulder-r :joint-angle 70);;;回外回内方向 70
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle 74);;肩上げる方向 74
   (send *pr2* :larm :shoulder-r :joint-angle 70);;;回外回内方向 70
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle sp);;肩上げる方向
   (send *pr2* :larm :shoulder-r :joint-angle sr);;;回外回内方向
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   (send *pr2* :larm :shoulder-p :joint-angle 74);;肩上げる方向 74
   (send *pr2* :larm :shoulder-r :joint-angle 70);;;回外回内方向 70
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :larm-controller)
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 2000 :larm-controller)
   )
 
 (defun torso (&key (wz 50))
