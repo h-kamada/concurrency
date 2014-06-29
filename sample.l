@@ -173,20 +173,34 @@
   (send *pr2* :torso :waist-z :joint-angle 50)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector ) 3000 :torso-controller)
   )
-
+;;(send *pr2* :head :look-at (apply 'midpoint 0.5 (send *pr2* :arms :end-coords :worldpos)))
+;;(send *pr2* :head :look-at (send *pr2* :rarm :end-coords :worldpos))
 (defun head (&key (np 0))
-  (send *pr2* :head :neck-p :joint-angle 50);; 0
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :head-controller)
-  (send *pr2* :head :neck-p :joint-angle 0)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :head-controller)
-  (send *pr2* :head :neck-p :joint-angle 50)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :head-controller)
-  (send *pr2* :head :neck-p :joint-angle 0)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :head-controller)
-  (send *pr2* :head :neck-p :joint-angle 50)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :head-controller)
-  (send *pr2* :head :neck-p :joint-angle 0)
-  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 3000 :head-controller)
+  (send *pr2* :head :neck-p :joint-angle 40);; 0
+  (send *pr2* :head :neck-y :joint-angle 20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle -20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle 20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle -20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle 20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle -20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle 20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle -20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle 20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle -20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle 20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
+  (send *pr2* :head :neck-y :joint-angle -20);; 0
+  (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 8000 :head-controller)
   )
 
 (defun resetpose (&key (arg 1))
@@ -279,12 +293,15 @@
     (send *pr2* :reset-manip-pose)
     (send *ri* :angle-vector (send *pr2* :angle-vector) 3000)
     (head )
-    (rarm )
-    (larm )
-    (rarm-manip)
-    (larm-manip)
+
     (rarm-nagi)
+    (rarm )
+    (rarm-manip)
+
+    (larm )
+    (larm-manip)
     (larm-nagi)
+
     (ros::rate 10);;[hz]
     (while (ros::ok)
 ;;      (print 1)
