@@ -14,20 +14,26 @@
 
 ;; sending angle-vector separately for each action controllers
 (setf (get *ri* :angle-vector-queue-table) (make-hash-table))
-;;(setf (get *ri* :av-tm-queue-table) (make-hash-table))
-                                        ;(:default-controller :torso-controller :head-controller :rarm-controller :larm-controller)それぞれに対して
+(setf (get *ri* :av-tmp-table) (make-hash-table))
+(setf (get *ri* :tm-tmp-table) (make-hash-table))
+(setf (get *ri* :v-pop-table) (make-hash-table))
+(setf (get *ri* :grip-state-table) (make-hash-table))
+(setf (get *ri* :count-table) (make-hash-table))
+;;(:default-controller :torso-controller :head-controller :rarm-controller :larm-controller)それぞれに対して
 (dolist (ctype (send (pr2-interface-controller-table *ri*) :list-keys))
   (setf (gethash ctype (get *ri* :angle-vector-queue-table)) (instance queue :init))
-  ;;(setf (gethash :av-list (get *ri* :av-tm-queue-table)) (instance queue :init))
-  ;;(setf (gethash :tm-list (get *ri* :av-tm-queue-table)) (instance queue :init))
-)
+  (setf (gethash ctype (get *ri* :av-tmp-table)) (instance queue :init))
+  (setf (gethash ctype (get *ri* :tm-tmp-table)) (instance queue :init))
+  (setf (gethash ctype (get *ri* :v-pop-table)) (instance queue :init))
+  (setf (gethash ctype (get *ri* :grip-state-table)) (instance queue :init))
+  (setf (gethash ctype (get *ri* :count-table)) 0)) ;;counter 全て0に設定しておく
 
 (defmethod pr2-interface
   (:angle-vector-sequence-parallel
    (avs tms ctype)
    (send (gethash ctype (get self :angle-vector-queue-table)) :push (cons avs tms)))
-   ;;(send (gethash :av-list (get self :av-tm-queue-table)) :push (list avs))
-   ;;(send (gethash :tm-list (get self :av-tm-queue-table)):push (list tms)))
+  ;;(send (gethash :av-list (get self :av-tm-queue-table)) :push (list avs))
+  ;;(send (gethash :tm-list (get self :av-tm-queue-table)):push (list tms)))
   (:angle-vector-parallel
    (av &optional (tm 2000) (ctype :default-controller))
    (if (equal ctype :default-controller)
@@ -41,61 +47,129 @@
    ()
    (let ((qtable (get self :angle-vector-queue-table)))
      (mapcar #'(lambda (k v)
-                 (let ((v-pop (send v :pop))
-                       (av-tmp (instance queue :init))
-                       (tm-tmp (instance queue :init)))
-                   (while (null (null v-pop))
-                   (ros::ros-info "~A" v-pop)
-                     (cond ((equal (car (car v-pop)) :start-grasp)
-                            (ros::ros-info "start")
-                            (ros::ros-info "~A~A~A" (send av-tmp :list) (send tm-tmp :list) k)
-                            (send *ri* :angle-vector-sequence (send av-tmp :list) (send tm-tmp :list) k)
-                            (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state))
-                            (while (not (find actionlib_msgs::GoalStatus::*SUCCEEDED*
-                                              (send-all (gethash k controller-table) :get-state)))
-                              (ros::spin-once)
-                              (send *ri* :spin-once)
-                              (ros::ros-info "~A ~A" actionlib_msgs::GoalStatus::*SUCCEEDED* (send-all (gethash k controller-table) :get-state))
-                              )
-                            (send *ri* :start-grasp (car (cdr v-pop)))
-                            (send av-tmp :clear)
-                            (send tm-tmp :clear)
-                            (setf v-pop (send v :pop)))
-                           ((equal (car (car v-pop)) :stop-grasp)
-                            (ros::ros-info "stop")
-                            (send *ri* :angle-vector-sequence (send av-tmp :list) (send tm-tmp :list) k)
-                            (while (not (find actionlib_msgs::GoalStatus::*SUCCEEDED*
-                                              (send-all (gethash k controller-table) :get-state)))
-                              (ros::spin-once)
-                              (send *ri* :spin-once)
-                              )
-                            (send *ri* :stop-grasp (car (cdr v-pop)) :wait t)
-                            (send av-tmp :clear)
-                            (send tm-tmp :clear)
-                            (setf v-pop (send v :pop)))
-                           (t
-                            (ros::ros-info "t")
-                            (send av-tmp :push (car (car v-pop)))
-                            (send tm-tmp :push (car (cdr v-pop)))
-                            (setf v-pop (send v :pop))
-                            )))
-                   (send *ri* :angle-vector-sequence (send av-tmp :list) (send tm-tmp :list) k)
-))
+                 (let ((v-pop (send v :pop));;  ・・・(list av tm)
+                       (av-tmp (instance queue :init));; ...(list av av av)
+                       (tm-tmp (instance queue :init)));;... (list tm tm tm)
+                       (while (null (null v-pop))
+                         (ros::ros-info "~A" v-pop)
+                         (cond ((equal (car (car v-pop)) :start-grasp)
+                                (ros::ros-info "start")
+                                (ros::ros-info "~A~A~A" (send av-tmp :list) (send tm-tmp :list) k)
+                                (send *ri* :angle-vector-sequence (send av-tmp :list) (send tm-tmp :list) k)
+                                (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state))
+                                (while (not (find actionlib_msgs::GoalStatus::*SUCCEEDED*
+                                                  (send-all (gethash k controller-table) :get-state)))
+                                  (ros::spin-once)
+                                  (send *ri* :spin-once)
+                                  (ros::ros-info "~A ~A" actionlib_msgs::GoalStatus::*SUCCEEDED* (send-all (gethash k controller-table) :get-state))
+                                  )
+                                (send *ri* :start-grasp (car (cdr v-pop)))
+                                (send av-tmp :clear)
+                                (send tm-tmp :clear)
+                                (setf v-pop (send v :pop)))
+                               ((equal (car (car v-pop)) :stop-grasp)
+                                (ros::ros-info "stop")
+                                (send *ri* :angle-vector-sequence (send av-tmp :list) (send tm-tmp :list) k)
+                                (while (not (find actionlib_msgs::GoalStatus::*SUCCEEDED*
+                                                  (send-all (gethash k controller-table) :get-state)))
+                                  (ros::spin-once)
+                                  (send *ri* :spin-once)
+                                  )
+                                (send *ri* :stop-grasp (car (cdr v-pop)) :wait t)
+                                (send av-tmp :clear)
+                                (send tm-tmp :clear)
+                                (setf v-pop (send v :pop)))
+                               (t
+                                (ros::ros-info "t")
+                                (send av-tmp :push (car (car v-pop)))
+                                (send tm-tmp :push (car (cdr v-pop)))
+                                (setf v-pop (send v :pop))
+                                )))
+                       (send *ri* :angle-vector-sequence (send av-tmp :list) (send tm-tmp :list) k)
+                       ))
              (send qtable :list-keys) (send qtable :list-values))))
-  ;;           :defa :rarm とか５つ      "<queue # ...> が５つ
-  (:dequeue
+;;            :defa :rarm とか５つ      "<queue # ...> が５つ
+  (:dequeue-seq2
    ()
+   (dolist (ctype (send (pr2-interface-controller-table *ri*) :list-keys))
+     (setf (gethash ctype (get *ri* :count-table)) 0)) ;;counter 全て0に設定しておく
    (let ((qtable (get self :angle-vector-queue-table)))
-     (mapcar #'(lambda (k v)
-                 (unless (equal k :default-controller)
-                   (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state))
-                   (when (not (find actionlib_msgs::GoalStatus::*ACTIVE*
-                                    (send-all (gethash k controller-table) :get-state)))
-                     (let ((avs-tms (send v :pop)))
-                       (unless (null (car(car avs-tms)))
-                         (unless (null (car(cdr avs-tms)))
-                           (send self :angle-vector (car(car avs-tms)) (car(cdr avs-tms)) k)))))))
-             (send qtable :list-keys) (send qtable :list-values)))))
+     (while (not (equal 4 (+ (gethash :torso-controller (get *ri* :count-table))
+                             (gethash :rarm-controller (get *ri* :count-table))
+                             (gethash :larm-controller (get *ri* :count-table))
+                             (gethash :head-controller (get *ri* :count-table)))))
+       (mapcar #'(lambda (k v)
+                   (ros::spin-once)
+                   (send *ri* :spin-once)
+                   (ros::ros-info "~A" k)
+                   (let ((v-pop (car (send v :list))) ;;(av tm)のcar部(つまりpop部) popは後で
+                         (av-tmp (send (gethash k (get self :av-tmp-table)) :list))
+                         (tm-tmp (send (gethash k (get self :tm-tmp-table)) :list))
+                         (grip-state (send (gethash k (get self :grip-state-table)) :pop)))
+                     (if (null v-pop)
+                         (if (not (null (car av-tmp)))
+                             (progn
+                               (send *ri* :angle-vector-sequence av-tmp tm-tmp k);;取り出したので
+                               (send (gethash k (get self :av-tmp-table)) :clear);;(av av av )clear
+                               (send (gethash k (get self :tm-tmp-table)) :clear))
+                           (progn (setf (gethash k (get *ri* :count-table)) 1) ;;counter to 1
+                                  (ros::ros-info "null")
+                                  (send (gethash k (get self :av-tmp-table)) :clear)
+                                  (send (gethash k (get self :tm-tmp-table)) :clear)))
+                       (progn
+                         (ros::ros-info "~A" (send v :list))
+                         (ros::ros-info "~A" grip-state)
+                         (cond ((equal grip-state :start)
+                                (if (find actionlib_msgs::GoalStatus::*SUCCEEDED*
+                                          (send-all (gethash k controller-table) :get-state))
+                                    (progn
+                                      (send *ri* :start-grasp (car (cdr v-pop)))
+                                      (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state)))))
+                               ((equal grip-state :stop)
+                                (if (find actionlib_msgs::GoalStatus::*SUCCEEDED*
+                                          (send-all (gethash k controller-table) :get-state))
+                                    (progn
+                                      (send *ri* :stop-grasp (car (cdr v-pop)) :wait t)
+                                      (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state)))))
+                               (t
+                                (cond ((equal (car (car v-pop)) :start-grasp)
+                                       (ros::ros-info "start flag")
+                                       (ros::ros-info "~A~A~A" av-tmp tm-tmp k)
+                                       (send *ri* :angle-vector-sequence av-tmp tm-tmp k);;取り出したので
+                                       (send (gethash k (get self :av-tmp-table)) :clear);;(av av av )らを初期化
+                                       (send (gethash k (get self :tm-tmp-table)) :clear)
+                                       (send v :pop) ;; :start-graspだったlistの部分をpopして無くす
+                                       (send (gethash k (get self :grip-state-table)) :push :start))
+                                      ((equal (car (car v-pop)) :stop-grasp)
+                                       (ros::ros-info "stop")
+                                       (send *ri* :angle-vector-sequence av-tmp tm-tmp k)
+                                       (send (gethash k (get self :av-tmp-table)) :clear)
+                                       (send (gethash k (get self :tm-tmp-table)) :clear)
+                                       (send v :pop) ;; :stop-graspだったlistの部分をpopして無くす
+                                       (send (gethash k (get self :grip-state-table)) :push :stop))
+                                      (t
+                                       (ros::ros-info "t")
+                                       (send (gethash k (get self :av-tmp-table)) :push (car (car v-pop)))
+                                       (send (gethash k (get self :tm-tmp-table)) :push (car (cdr v-pop)))
+                                       (send v :pop)
+                                       ))
+                                ))
+                         ))))
+                   (send qtable :list-keys) (send qtable :list-values)))))
+   ;;           :defa :rarm とか５つ      "<queue # ...> が５つ
+   (:dequeue
+    ()
+    (let ((qtable (get self :angle-vector-queue-table)))
+      (mapcar #'(lambda (k v)
+                  (unless (equal k :default-controller)
+                    (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state))
+                    (when (not (find actionlib_msgs::GoalStatus::*ACTIVE*
+                                     (send-all (gethash k controller-table) :get-state)))
+                      (let ((avs-tms (send v :pop)))
+                        (unless (null (car(car avs-tms)))
+                          (unless (null (car(cdr avs-tms)))
+                            (send self :angle-vector (car(car avs-tms)) (car(cdr avs-tms)) k)))))))
+              (send qtable :list-keys) (send qtable :list-values)))))
 
 ;;(pr2) ;;(setq *pr2* (instance pr2-robot :init)) pr2.l
 (pr2-init);;(setq *ri* (instance pr2-interface :init))etc...
