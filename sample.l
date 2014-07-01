@@ -91,6 +91,7 @@
 ;;            :defa :rarm とか５つ      "<queue # ...> が５つ
   (:dequeue-seq2
    ()
+   (ros::rate 10);;[hz]
    (dolist (ctype (send (pr2-interface-controller-table *ri*) :list-keys))
      (setf (gethash ctype (get *ri* :count-table)) 0)) ;;counter 全て0に設定しておく
    (let ((qtable (get self :angle-vector-queue-table)))
@@ -98,6 +99,12 @@
                              (gethash :rarm-controller (get *ri* :count-table))
                              (gethash :larm-controller (get *ri* :count-table))
                              (gethash :head-controller (get *ri* :count-table)))))
+       (dolist (ctype (send (pr2-interface-controller-table *ri*) :list-keys))
+         (warn "[debug0] dolist print is here~%")
+         (ros::ros-info "~A"(send-all (gethash ctype controller-table) :get-state)))
+       (unix:sleep 1)
+       (ros::spin-once)
+       (send *ri* :spin-once)
        (mapcar #'(lambda (k v)
                    (ros::spin-once)
                    (send *ri* :spin-once)
@@ -106,46 +113,63 @@
                          (av-tmp (send (gethash k (get self :av-tmp-table)) :list))
                          (tm-tmp (send (gethash k (get self :tm-tmp-table)) :list))
                          (grip-state (send (gethash k (get self :grip-state-table)) :pop)))
+                     (warn "[debug11] ~a ~a ~%" k (gethash k (get self :grip-state-table)))
                      (if (null v-pop)
                          (if (not (null (car av-tmp)))
                              (progn
+                               (warn "[debug1] ~a is nil1~%" k)
                                (send *ri* :angle-vector-sequence av-tmp tm-tmp k);;取り出したので
                                (send (gethash k (get self :av-tmp-table)) :clear);;(av av av )clear
                                (send (gethash k (get self :tm-tmp-table)) :clear))
-                           (progn (setf (gethash k (get *ri* :count-table)) 1) ;;counter to 1
-                                  (ros::ros-info "null")
-                                  (send (gethash k (get self :av-tmp-table)) :clear)
-                                  (send (gethash k (get self :tm-tmp-table)) :clear)))
+                           (progn
+                             (warn "[debug1] ~a is nil2~%" k)
+                             (setf (gethash k (get *ri* :count-table)) 1) ;;counter to 1
+                             (ros::ros-info "null")
+                             (send (gethash k (get self :av-tmp-table)) :clear)
+                             (send (gethash k (get self :tm-tmp-table)) :clear)))
                        (progn
-                         (ros::ros-info "~A" (send v :list))
-                         (ros::ros-info "~A" grip-state)
+                         (warn "[debug2] ~a is not nil~%" k)
+                         (ros::ros-info "v: ~A" (send v :list))
+                         (ros::ros-info "grip-state ~A" grip-state)
+                         (ros::spin-once)
+                         (send *ri* :spin-once)
+                         (warn "[debug3] start1 cont ~a, state ~a~%" k (send-all (gethash k controller-table) :get-state))
                          (cond ((equal grip-state :start)
+                                (warn "[debug3] grip-start1 cont ~a, state ~a~%" k (send-all (gethash k controller-table) :get-state))
                                 (if (find actionlib_msgs::GoalStatus::*SUCCEEDED*
                                           (send-all (gethash k controller-table) :get-state))
                                     (progn
                                       (send *ri* :start-grasp (car (cdr v-pop)))
-                                      (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state)))))
+                                      (ros::ros-info "suc, state: ~A, ~A" actionlib_msgs::GoalStatus::*SUCCEEDED* (send-all (gethash k controller-table) :get-state))
+                                      (send v :pop) ;; :start-graspだったlistの部分をpopして無くす
+                                      )
+                                  (ros::ros-info "suc, state: ~A, ~A" actionlib_msgs::GoalStatus::*SUCCEEDED* (send-all (gethash k controller-table) :get-state))))
                                ((equal grip-state :stop)
+                                (warn "[debug3] grip-stop1 cont ~a, state ~a~%" k (send-all (gethash k controller-table) :get-state))
                                 (if (find actionlib_msgs::GoalStatus::*SUCCEEDED*
                                           (send-all (gethash k controller-table) :get-state))
                                     (progn
                                       (send *ri* :stop-grasp (car (cdr v-pop)) :wait t)
-                                      (ros::ros-info "~A" (send-all (gethash k controller-table) :get-state)))))
+                                      (ros::ros-info "~A~A" actionlib_msgs::GoalStatus::*SUCCEEDED* (send-all (gethash k controller-table) :get-state))
+                                      (send v :pop)) ;; :start-graspだったlistの部分をpopして無くす
+                                  (ros::ros-info "~A~A" actionlib_msgs::GoalStatus::*SUCCEEDED* (send-all (gethash k controller-table) :get-state))))
                                (t
+                                (warn "[debug3] otherwise cont ~a, state ~a~%" k (send-all (gethash k controller-table) :get-state))
                                 (cond ((equal (car (car v-pop)) :start-grasp)
                                        (ros::ros-info "start flag")
                                        (ros::ros-info "~A~A~A" av-tmp tm-tmp k)
-                                       (send *ri* :angle-vector-sequence av-tmp tm-tmp k);;取り出したので
+                                       (warn "[debug10] ~a ~a ~a~%" av-tmp tm-tmp k)
+                                       (send *ri* :angle-vector-sequence av-tmp tm-tmp k);;取り出したでの
                                        (send (gethash k (get self :av-tmp-table)) :clear);;(av av av )らを初期化
                                        (send (gethash k (get self :tm-tmp-table)) :clear)
-                                       (send v :pop) ;; :start-graspだったlistの部分をpopして無くす
-                                       (send (gethash k (get self :grip-state-table)) :push :start))
+                                       (send (gethash k (get self :grip-state-table)) :push :start)
+                                       (warn "[debug12] ~a ~a ~%" k (gethash k (get self :grip-state-table))))
                                       ((equal (car (car v-pop)) :stop-grasp)
                                        (ros::ros-info "stop")
+                                       (ros::ros-info "av-tmp ~A" av-tmp)
                                        (send *ri* :angle-vector-sequence av-tmp tm-tmp k)
                                        (send (gethash k (get self :av-tmp-table)) :clear)
                                        (send (gethash k (get self :tm-tmp-table)) :clear)
-                                       (send v :pop) ;; :stop-graspだったlistの部分をpopして無くす
                                        (send (gethash k (get self :grip-state-table)) :push :stop))
                                       (t
                                        (ros::ros-info "t")
@@ -202,7 +226,7 @@
 (defun rarm-manip(&key (a 1))
   (send *pr2* :reset-manip-pose)
   (send *ri* :angle-vector-parallel (send *pr2* :angle-vector) 2000 :rarm-controller)
-  (send *ri* :stop-grasp :rarm)
+;;  (send *ri* :stop-grasp :rarm)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad -40) :z :world) :use-torso nil)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 10) :y :world) :use-torso nil)
   (send *pr2* :inverse-kinematics (send  (send (send *pr2* :rarm :end-coords) :copy-worldcoords) :rotate (deg2rad 30) :x :world) :use-torso nil)
