@@ -491,4 +491,36 @@ eustf roseus_c_util "sec [1411376403] nsec [29250307] type_num [512]"
   C-c C-cinterrupt1.B1-irteusgl$ exit
 [ INFO] [1411376421.778451157]: cell* ROSEUS_EXIT(context*, int, cell**)
 [ INFO] [1411376421.778597330]: exiting roseus 0
+h-kamada@pr1012:~/git/concurrency/r_demo$ ls
+check_data.org  dmeo.org  listener.l  r_listen.l  talker.l
+h-kamada@pr1012:~/git/concurrency/r_demo$ git add check_data.org 
+h-kamada@pr1012:~/git/concurrency/r_demo$ git status
+# On branch sequence
+# Changes to be committed:
+#   (use "git reset HEAD <file>..." to unstage)
+#
+#	new file:   check_data.org
+#
+# Untracked files:
+#   (use "git add <file>..." to include in what will be committed)
+#
+#	.#check_data.org
+h-kamada@pr1012:~/git/concurrency/r_demo$ git commit -m "add check"
+[sequence 32b000d] add check
+ 1 file changed, 494 insertions(+)
+ create mode 100644 r_demo/check_data.org
+h-kamada@pr1012:~/git/concurrency/r_demo$ git remote
+origin
+h-kamada@pr1012:~/git/concurrency/r_demo$ git push origin master
+Username for 'https://github.com':   C-c C-c
 h-kamada@pr1012:~/git/concurrency/r_demo$ 
+h-kamada@pr1012:~/git/concurrency/r_demo$ 
+h-kamada@pr1012:~/git/concurrency/r_demo$ git push origin sequence
+Username for 'https://github.com': h-kamada
+Password for 'https://h-kamada@github.com': a40707hk
+
+To https://github.com/h-kamada/concurrency.git
+   60ece57..32b000d  sequence -> sequence
+h-kamada@pr1012:~/git/concurrency/r_demo$ exit
+
+Process shell finished
